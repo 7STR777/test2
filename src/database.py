@@ -12,13 +12,31 @@ def user_from_db(username:str):
         cur = conn.cursor()
         cur.execute("""SELECT username, password FROM users WHERE username=%s""", (username,))
         user_info_tuple = cur.fetchone()
-        user_info = {"username":user_info_tuple[0],
-                     "password":user_info_tuple[1]}
-        if user_info:
+        if user_info_tuple != None:
+            user_info = {"username":user_info_tuple[0],
+                        "password":user_info_tuple[1]}
             return user_info
-        return None
+        else:
+            return None
     except psycopg2.OperationalError as ex:
         # Обработка ошибок подключения (неверный логин, пароль)
+        print(f"Не удалось подключиться к базе данных: {ex}")
+        return None
+    except Exception as e:
+        print(f"Произошла другая ошибка{e}")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+def delete_user(username:str):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""DELETE FROM users WHERE username=%s""", (username, ))
+        conn.commit()
+    except psycopg2.OperationalError as ex:
         print(f"Не удалось подключиться к базе данных: {ex}")
         return None
     except Exception as e:
